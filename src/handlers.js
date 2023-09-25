@@ -8,34 +8,13 @@ const addBookHandler = (request, h) => {
     if (error){
         return h.response({ status, message }).code(400);
     }
-    const {
-        name,
-        year,
-        author,
-        summary,
-        publisher,
-        pageCount,
-        readPage,
-        reading
-    } = request.payload;
-    const fhinished = pageCount === readPage ? true : false;
+    
+    const requestJson = request.payload;
+    const fhinished = requestJson.pageCount === requestJson.readPage ? true : false;
     const insertedAt = new Date().toString();
     const updatedAt = insertedAt;
-    books.push({
-        id,
-        name,
-        year,
-        author,
-        summary,
-        publisher,
-        pageCount,
-        readPage,
-        reading,
-        fhinished,
-        insertedAt,
-        updatedAt
-    })
-    console.log(books);
+
+    books.push({  id, ...requestJson, fhinished,insertedAt, updatedAt });
     return h.response({status, message, data}).code(201);
 }
 
