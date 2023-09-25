@@ -1,14 +1,27 @@
-const { nanoid } = require("nanoid");
+const { nanoid } = require('nanoid')
 const { books } = require("./books");
-const { validateBook } = require("./utils");
+const { validateBook } = require("./utils/validators");
 
-const addBookHandler = (request, response) => {
-    const { name, year, author, summary, publisher, pageCount, readPage, reading } = request.payload;
+const addBookHandler = (request, h) => {
     const id = nanoid(16);
-    const insertAt = new Date().toString();
-    const updatedAt = insertAt;
+    const { error, status, message, data = { bookId : id} } = validateBook(request.payload);
+    if (error){
+        return h.response({ status, message }).code(400);
+    }
+    const {
+        name,
+        year,
+        author,
+        summary,
+        publisher,
+        pageCount,
+        readPage,
+        reading
+    } = request.payload;
     const fhinished = pageCount === readPage ? true : false;
-    const newBook = {
+    const insertedAt = new Date().toString();
+    const updatedAt = insertedAt;
+    books.push({
         id,
         name,
         year,
@@ -17,11 +30,74 @@ const addBookHandler = (request, response) => {
         publisher,
         pageCount,
         readPage,
-        fhinished,
         reading,
-        insertAt,
+        fhinished,
+        insertedAt,
         updatedAt
-    };
-    validateBook(newBook);
-
+    })
+    console.log(books);
+    return h.response({status, message, data}).code(201);
 }
+
+const getAllBooksHandler = () => {
+    const booksResponse = new Array();
+    books.forEach(book => {
+        booksResponse.push({
+            id: book.id,
+            name: book.name,
+            publisher: book.publisher
+        });
+    });
+    return {
+        status: 'success',
+        data: {
+            books: booksResponse
+        }
+    };
+};
+
+const getBookById = (requst, h) => {
+    const { id } = requst.params;
+    const book = books.filter(book => book.id === id)[0];
+    if (book == undefined){
+        return h.response({
+            status: 'fail',
+            message: 'Buku tidak ditemukan'
+        }).code(400);
+    }
+    return h.response({
+        status: 'success',
+        data: {
+            book,
+        },
+    });
+};
+
+const updateBookById = (request, h) => {
+    const { id } = request.params;
+    const index = books.findIndex(book => book.id === id);
+    const { error, status, message } = validateBook(request.payload);
+    if(index === -1){
+        return h.response({
+            status: 'fail',
+            message: 'Gagal memperbarui buku. id tidak ditemukan'
+        }).code(400);
+    }
+    if(error) {
+        return h.response({
+            status,
+            message
+        }).code(400);
+    }
+    const { name, year, author, summary, publisher, pageCount, readPage, reading } = request.payload;
+    const updatedAt = new Date().toString();
+    books[index] = {
+     ...books[index], name, year, author, summary, publisher, pageCount, readPage, reading, updatedAt
+    };
+    return h.response({
+        status: 'success',
+        message: 'Buku berhasil diperbarui',
+     }).code(200);
+}
+
+module.exports = { addBookHandler, getAllBooksHandler, getBookById, updateBookById }
