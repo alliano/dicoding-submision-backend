@@ -104,7 +104,7 @@ Response data
 }
 ```
 ## Delete book by id
-DELETE `http://52.77.233.15:9000/books/{id}`
+DELETE `http://52.77.233.15:9000/books/{id}`  
 Response data  
 ``` json
 {
